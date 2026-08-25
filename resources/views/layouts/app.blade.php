@@ -24,6 +24,12 @@
         if (localStorage.getItem('sidebar-collapsed') === 'true') {
             document.body.classList.add('sidebar-toggled');
         }
+        const savedFontSize = localStorage.getItem('sipdk-font-size');
+        if (savedFontSize === 'md') {
+            document.body.classList.add('font-size-md');
+        } else if (savedFontSize === 'lg') {
+            document.body.classList.add('font-size-lg');
+        }
     </script>
 
     <!-- Sidebar -->
@@ -44,15 +50,60 @@
         </main>
     </div>
 
+    <!-- Quick Guide Modal -->
+    @include('layouts.partials.quick_guide_modal')
 
     <!-- Bootstrap 5 JS Bundle -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     
-    <!-- Sidebar Toggle Script -->
+    <!-- Scripts -->
     <script>
-        document.getElementById('sidebarToggle').addEventListener('click', function() {
+        // Sidebar Toggle (Desktop & Mobile)
+        const sidebarToggle = document.getElementById('sidebarToggle');
+        const mobileSidebarToggle = document.getElementById('mobileSidebarToggle');
+        
+        function toggleSidebarHandler() {
             document.body.classList.toggle('sidebar-toggled');
             localStorage.setItem('sidebar-collapsed', document.body.classList.contains('sidebar-toggled'));
+        }
+
+        if (sidebarToggle) {
+            sidebarToggle.addEventListener('click', toggleSidebarHandler);
+        }
+        if (mobileSidebarToggle) {
+            mobileSidebarToggle.addEventListener('click', toggleSidebarHandler);
+        }
+
+        // Accessibility: Font Size Switcher
+        function setFontSize(size) {
+            document.body.classList.remove('font-size-md', 'font-size-lg');
+            
+            const btnNormal = document.getElementById('btnFontNormal');
+            const btnMd = document.getElementById('btnFontMd');
+            const btnLg = document.getElementById('btnFontLg');
+            
+            if (btnNormal) btnNormal.classList.remove('active');
+            if (btnMd) btnMd.classList.remove('active');
+            if (btnLg) btnLg.classList.remove('active');
+
+            if (size === 'md') {
+                document.body.classList.add('font-size-md');
+                localStorage.setItem('sipdk-font-size', 'md');
+                if (btnMd) btnMd.classList.add('active');
+            } else if (size === 'lg') {
+                document.body.classList.add('font-size-lg');
+                localStorage.setItem('sipdk-font-size', 'lg');
+                if (btnLg) btnLg.classList.add('active');
+            } else {
+                localStorage.setItem('sipdk-font-size', 'normal');
+                if (btnNormal) btnNormal.classList.add('active');
+            }
+        }
+
+        // Sync button active state on initial load
+        document.addEventListener('DOMContentLoaded', function() {
+            const currentSize = localStorage.getItem('sipdk-font-size') || 'normal';
+            setFontSize(currentSize);
         });
     </script>
     
