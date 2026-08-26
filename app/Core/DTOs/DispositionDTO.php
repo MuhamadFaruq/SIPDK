@@ -12,5 +12,6 @@ class DispositionDTO
         public readonly string $instruction,
         public readonly string $urgency,
         public readonly ?string $dueDate,
+        public readonly ?int $parentId = null,
     ) {}
 }

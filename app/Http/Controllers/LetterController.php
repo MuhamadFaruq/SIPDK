@@ -24,6 +24,11 @@ class LetterController extends Controller
 
     public function index(Request $request)
     {
+        $user = Auth::user();
+        if ($user->isPelaksana()) {
+            return redirect()->route('dispositions.index');
+        }
+
         $letters = $this->letterRepository->getPaginatedLetters($request->all(), 10);
         $categories = LetterCategory::all();
 
@@ -54,6 +59,15 @@ class LetterController extends Controller
         $letter = $this->letterRepository->findById((int) $id);
         if (!$letter) {
             abort(404, 'Surat tidak ditemukan.');
+        }
+
+        $user = Auth::user();
+        // Standar SOP: Pelaksana hanya dapat melihat surat yang telah didisposisikan kepada dirinya
+        if ($user->isPelaksana()) {
+            $isAssigned = $letter->dispositions()->where('recipient_user_id', $user->id)->exists();
+            if (!$isAssigned) {
+                abort(403, 'Akses ditolak. Anda hanya dapat melihat rincian surat yang telah didisposisikan kepada Anda oleh pimpinan.');
+            }
         }
 
         $recipients = $this->userRepository->getActiveDispositionRecipients();
@@ -101,6 +115,47 @@ class LetterController extends Controller
             abort(404, 'Surat tidak ditemukan.');
         }
 
+        $user = Auth::user();
+        if ($user->isPelaksana()) {
+            abort(403, 'Akses ditolak. Lembar agenda persuratan hanya dapat dicetak oleh Administrator dan Pimpinan.');
+        }
+
         return view('letters.print_agenda', compact('letter'));
+    }
+
+    public function file($id)
+    {
+        $letter = $this->letterRepository->findById((int) $id);
+        if (!$letter || !$letter->file_path) {
+            abort(404, 'Berkas dokumen tidak ditemukan.');
+        }
+
+        $user = Auth::user();
+        if ($user->isPelaksana()) {
+            $isAssigned = $letter->dispositions()->where('recipient_user_id', $user->id)->exists();
+            if (!$isAssigned) {
+                abort(403, 'Akses ditolak. Anda tidak memiliki izin mengakses berkas surat ini.');
+            }
+        }
+
+        if (!\Illuminate\Support\Facades\Storage::disk('public')->exists($letter->file_path)) {
+            abort(404, 'Berkas fisik tidak ditemukan di server.');
+        }
+
+        $fullPath = \Illuminate\Support\Facades\Storage::disk('public')->path($letter->file_path);
+
+        $mimeType = match($letter->file_type) {
+            'pdf' => 'application/pdf',
+            'png' => 'image/png',
+            'jpg', 'jpeg' => 'image/jpeg',
+            'doc' => 'application/msword',
+            'docx' => 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+            default => mime_content_type($fullPath) ?: 'application/octet-stream',
+        };
+
+        return response()->file($fullPath, [
+            'Content-Type' => $mimeType,
+            'Content-Disposition' => 'inline; filename="' . addslashes($letter->file_name ?? basename($fullPath)) . '"',
+        ]);
     }
 }

@@ -17,18 +17,84 @@
                     @if($user->department) - {{ $user->department->name }} @endif. Monitoring persuratan kelurahan hari ini:
                 </p>
             </div>
-            <div class="col-lg-4 text-lg-end mt-3 mt-lg-0">
+            <div class="col-lg-4 text-lg-end mt-3 mt-lg-0 d-flex justify-content-lg-end gap-2 flex-wrap">
                 @if(auth()->user()->isAdmin())
-                    <a href="{{ route('letters.create') }}" class="btn btn-primary rounded-3 px-4 py-2 fw-bold shadow-sm" style="background:#0284c7; border:none;">
-                        <i class="fa-solid fa-plus-circle me-2"></i> Catat Surat Baru
+                    <a href="{{ route('letters.create') }}" class="btn btn-primary rounded-3 px-3 py-2 fw-bold shadow-sm" style="background:#0284c7; border:none;">
+                        <i class="fa-solid fa-plus-circle me-1"></i> Surat Masuk
+                    </a>
+                    <a href="{{ route('outgoing-letters.create') }}" class="btn btn-outline-light rounded-3 px-3 py-2 fw-bold shadow-sm">
+                        <i class="fa-solid fa-paper-plane me-1"></i> Surat Keluar
                     </a>
                 @endif
             </div>
         </div>
     </div>
 
-    @if(!auth()->user()->isPelaksana())
-    <!-- Stat Cards Grid (Not for Pelaksana) -->
+    @if(auth()->user()->isPelaksana())
+    <!-- Stat Cards Grid (Khusus Pelaksana) -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-6 col-xl-3">
+            <div class="card-custom p-4 h-100 d-flex flex-column justify-content-between">
+                <div class="d-flex align-items-center justify-content-between mb-3">
+                    <div class="rounded-3 bg-warning-subtle text-warning d-flex align-items-center justify-content-center" style="width:44px; height:44px; font-size:1.15rem;">
+                        <i class="fa-solid fa-clock"></i>
+                    </div>
+                    <span class="badge badge-status badge-didisposisi">Menunggu</span>
+                </div>
+                <div>
+                    <h2 class="fw-extrabold text-dark mb-1" style="font-size:2.2rem; letter-spacing:-1px;">{{ $myTaskCounts['menunggu'] }}</h2>
+                    <small class="text-muted fw-semibold">Tugas Menunggu Tindak Lanjut</small>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6 col-xl-3">
+            <div class="card-custom p-4 h-100 d-flex flex-column justify-content-between">
+                <div class="d-flex align-items-center justify-content-between mb-3">
+                    <div class="rounded-3 bg-info-subtle text-info d-flex align-items-center justify-content-center" style="width:44px; height:44px; font-size:1.15rem;">
+                        <i class="fa-solid fa-spinner"></i>
+                    </div>
+                    <span class="badge badge-status badge-dipproses">Diproses</span>
+                </div>
+                <div>
+                    <h2 class="fw-extrabold text-dark mb-1" style="font-size:2.2rem; letter-spacing:-1px;">{{ $myTaskCounts['diproses'] }}</h2>
+                    <small class="text-muted fw-semibold">Tugas Sedang Dikerjakan</small>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6 col-xl-3">
+            <div class="card-custom p-4 h-100 d-flex flex-column justify-content-between">
+                <div class="d-flex align-items-center justify-content-between mb-3">
+                    <div class="rounded-3 bg-success-subtle text-success d-flex align-items-center justify-content-center" style="width:44px; height:44px; font-size:1.15rem;">
+                        <i class="fa-solid fa-circle-check"></i>
+                    </div>
+                    <span class="badge badge-status badge-selesai">Selesai</span>
+                </div>
+                <div>
+                    <h2 class="fw-extrabold text-dark mb-1" style="font-size:2.2rem; letter-spacing:-1px;">{{ $myTaskCounts['selesai'] }}</h2>
+                    <small class="text-muted fw-semibold">Tugas Berhasil Diselesaikan</small>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6 col-xl-3">
+            <div class="card-custom p-4 h-100 d-flex flex-column justify-content-between">
+                <div class="d-flex align-items-center justify-content-between mb-3">
+                    <div class="rounded-3 bg-primary-subtle text-primary d-flex align-items-center justify-content-center" style="width:44px; height:44px; font-size:1.15rem;">
+                        <i class="fa-solid fa-clipboard-list"></i>
+                    </div>
+                    <span class="badge bg-secondary text-white">Total</span>
+                </div>
+                <div>
+                    <h2 class="fw-extrabold text-dark mb-1" style="font-size:2.2rem; letter-spacing:-1px;">{{ $myTaskCounts['total'] }}</h2>
+                    <small class="text-muted fw-semibold">Total Disposisi Masuk</small>
+                </div>
+            </div>
+        </div>
+    </div>
+    @else
+    <!-- Stat Cards Grid (Admin & Pimpinan) -->
     <div class="row g-3 mb-4">
         <div class="col-md-6 col-xl-3">
             <div class="card-custom p-4 h-100 d-flex flex-column justify-content-between">
@@ -95,6 +161,20 @@
     <div class="row g-4">
         <!-- Left Column: Pending Dispositions & Recent Letters -->
         <div class="col-lg-8">
+
+            <!-- Empty state for Pelaksana when no pending tasks -->
+            @if(auth()->user()->isPelaksana() && $myPendingDispositions->count() == 0)
+                <div class="card-custom p-5 text-center mb-4">
+                    <div class="bg-success-subtle text-success rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width:64px; height:64px; font-size:1.75rem;">
+                        <i class="fa-solid fa-check-double"></i>
+                    </div>
+                    <h5 class="fw-bold text-dark mb-2">Semua Tugas Sudah Selesai!</h5>
+                    <p class="text-muted mb-4 fs-6">Tidak ada disposisi surat yang menunggu tindak lanjut Anda saat ini.</p>
+                    <a href="{{ route('dispositions.index') }}" class="btn btn-outline-primary rounded-3 px-4 fw-bold">
+                        <i class="fa-solid fa-clipboard-list me-1"></i> Buka Halaman Tugas Saya
+                    </a>
+                </div>
+            @endif
 
             <!-- Pending Dispositions Action Board for User -->
             @if($myPendingDispositions->count() > 0)
@@ -290,6 +370,33 @@
                         </div>
                     @endforeach
                 </div>
+            </div>
+            @endif
+
+            @if(auth()->user()->isPelaksana())
+            <!-- Pelaksana Guide & Info Card -->
+            <div class="card-custom p-4 mb-4">
+                <h5 class="fw-bold text-dark mb-3">
+                    <i class="fa-solid fa-circle-info me-2 text-primary"></i> Alur Kerja Disposisi
+                </h5>
+                <div class="d-flex flex-column gap-3 text-muted" style="font-size:0.88rem;">
+                    <div class="d-flex gap-2 align-items-start">
+                        <span class="badge bg-primary rounded-circle mt-1" style="width:20px; height:20px; display:inline-flex; align-items:center; justify-content:center; font-size:0.7rem;">1</span>
+                        <span>Surat masuk ditelaah & didisposisikan oleh <strong>Pimpinan (Lurah)</strong>.</span>
+                    </div>
+                    <div class="d-flex gap-2 align-items-start">
+                        <span class="badge bg-primary rounded-circle mt-1" style="width:20px; height:20px; display:inline-flex; align-items:center; justify-content:center; font-size:0.7rem;">2</span>
+                        <span>Pelaksana menerima notifikasi & instruksi resmi pada daftar <strong>Tugas Saya</strong>.</span>
+                    </div>
+                    <div class="d-flex gap-2 align-items-start">
+                        <span class="badge bg-primary rounded-circle mt-1" style="width:20px; height:20px; display:inline-flex; align-items:center; justify-content:center; font-size:0.7rem;">3</span>
+                        <span>Lakukan tindak lanjut dan klik <strong>Laporkan Selesai</strong> untuk mengarsipkan tugas.</span>
+                    </div>
+                </div>
+                <hr class="my-3">
+                <a href="{{ route('dispositions.index') }}" class="btn btn-light w-100 fw-bold text-primary border">
+                    <i class="fa-solid fa-arrow-right me-1"></i> Buka Menu Tugas Saya
+                </a>
             </div>
             @endif
 

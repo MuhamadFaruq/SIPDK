@@ -94,7 +94,7 @@ class EloquentLetterRepository implements LetterRepositoryInterface
             'degree' => $dto->degree,
             'file_path' => $dto->filePath,
             'file_name' => $dto->fileName,
-            'file_type' => $dto->fileType,
+            'file_type' => $dto->fileType ?? 'pdf',
             'file_size' => $dto->fileSize ?? 0,
             'status' => $dto->status ?? 'Baru',
             'created_by' => $dto->createdBy,

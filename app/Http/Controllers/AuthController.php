@@ -29,9 +29,20 @@ class AuthController extends Controller
         if (Auth::attempt($credentials, $request->boolean('remember'))) {
             $request->session()->regenerate();
             $user = Auth::user();
-            AuditLog::log($user, 'Login', 'Authentication', 'Pengguna berhasil masuk ke sistem.');
+            AuditLog::log($user, 'Login Berhasil', 'Authentication', 'Pengguna berhasil masuk ke sistem.');
             return redirect()->intended(route('dashboard'))->with('success', 'Selamat datang kembali, ' . $user->name);
         }
+
+        // Security Audit for failed login
+        AuditLog::create([
+            'user_id' => null,
+            'user_name' => 'Tamu / Percobaan Login',
+            'action' => 'Login Gagal',
+            'module' => 'Authentication',
+            'details' => "Percobaan login gagal untuk email: {$credentials['email']} dari IP: {$request->ip()}",
+            'ip_address' => $request->ip(),
+            'user_agent' => $request->userAgent(),
+        ]);
 
         return back()->withErrors([
             'email' => 'Email atau password yang Anda masukkan salah.',

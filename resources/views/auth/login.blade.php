@@ -23,7 +23,7 @@
 
         .login-card {
             width: 100%;
-            max-width: 960px;
+            max-width: 1060px;
             background: rgba(255, 255, 255, 0.98);
             border-radius: 24px;
             box-shadow: 0 20px 60px rgba(0, 0, 0, 0.35);
@@ -131,20 +131,41 @@
                 </form>
 
                 <!-- Quick Login Role Buttons -->
-                <div class="border-top pt-4">
-                    <div class="fw-bold text-dark fs-7 mb-2">
-                        <i class="fa-solid fa-users text-primary me-1"></i> Akses Cepat Akun Kedinasan:
+                <div class="border-top pt-3">
+                    <div class="d-flex align-items-center justify-content-between mb-2">
+                        <div class="fw-bold text-dark fs-7">
+                            <i class="fa-solid fa-users text-primary me-1"></i> Akses Cepat Petugas Kelurahan:
+                        </div>
+                        <small class="text-muted" style="font-size:0.75rem;">(Klik untuk login simulasi)</small>
                     </div>
 
                     <div class="row g-2">
                         @foreach($demoUsers as $du)
-                            <div class="col-6">
+                            <div class="col-md-6">
                                 <form action="{{ route('quick-login') }}" method="POST">
                                     @csrf
                                     <input type="hidden" name="user_id" value="{{ $du->id }}">
-                                    <button type="submit" class="quick-role-card w-100 text-start border-0">
-                                        <div class="fw-bold text-dark" style="font-size:0.8rem;">{{ Str::limit($du->name, 16) }}</div>
-                                        <span class="badge bg-secondary text-white" style="font-size:0.65rem;">{{ $du->role->display_name }}</span>
+                                    <button type="submit" class="quick-role-card w-100 text-start border d-flex flex-column justify-content-between h-100 p-2 rounded-3 shadow-xs">
+                                        <div>
+                                            <div class="fw-bold text-dark" style="font-size:0.85rem; line-height:1.25;">
+                                                {{ $du->name }}
+                                            </div>
+                                            <div class="text-muted" style="font-size:0.75rem; margin-top:2px;">
+                                                {{ $du->jabatan ?? ($du->department->name ?? 'Staf Kelurahan') }}
+                                            </div>
+                                        </div>
+                                        <div class="mt-2 d-flex align-items-center gap-1">
+                                            @if($du->role->name === 'pimpinan')
+                                                <span class="badge bg-primary-subtle text-primary border border-primary-subtle fw-semibold" style="font-size:0.68rem;">Pimpinan</span>
+                                            @elseif($du->role->name === 'admin')
+                                                <span class="badge bg-dark-subtle text-dark border fw-semibold" style="font-size:0.68rem;">Administrator</span>
+                                            @else
+                                                <span class="badge bg-success-subtle text-success border border-success-subtle fw-semibold" style="font-size:0.68rem;">Pelaksana</span>
+                                            @endif
+                                            @if($du->department)
+                                                <span class="text-muted" style="font-size:0.68rem;">• {{ $du->department->code }}</span>
+                                            @endif
+                                        </div>
                                     </button>
                                 </form>
                             </div>

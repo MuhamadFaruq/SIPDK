@@ -27,6 +27,10 @@
                 <i class="fa-solid fa-inbox"></i>
                 <span>Surat Masuk</span>
             </a>
+            <a href="{{ route('outgoing-letters.index') }}" class="nav-item-link {{ request()->routeIs('outgoing-letters.*') ? 'active' : '' }}">
+                <i class="fa-solid fa-paper-plane"></i>
+                <span>Surat Keluar</span>
+            </a>
         @endif
 
         <div class="menu-label">Tugas & Disposisi</div>

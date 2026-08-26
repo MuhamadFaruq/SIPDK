@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Core\Contracts\Repositories\AuditLogRepositoryInterface;
 use App\Core\Contracts\Repositories\DispositionRepositoryInterface;
 use App\Core\Contracts\Repositories\LetterRepositoryInterface;
+use App\Core\Contracts\Repositories\OutgoingLetterRepositoryInterface;
 use App\Models\Letter;
 use App\Models\Notification;
 use Illuminate\Http\Request;
@@ -15,6 +16,7 @@ class DashboardController extends Controller
 {
     public function __construct(
         private readonly LetterRepositoryInterface $letterRepository,
+        private readonly OutgoingLetterRepositoryInterface $outgoingLetterRepository,
         private readonly DispositionRepositoryInterface $dispositionRepository,
         private readonly AuditLogRepositoryInterface $auditLogRepository,
     ) {}
@@ -30,6 +32,9 @@ class DashboardController extends Controller
         $suratBaru = $counts['baru'];
         $suratDiproses = $counts['diproses'];
         $suratSelesai = $counts['selesai'];
+
+        // Outgoing letters metrics
+        $outgoingCounts = $this->outgoingLetterRepository->getCounts();
 
         // Dispositions via Repository
         $myPendingDispositions = $this->dispositionRepository->getPendingDispositionsForRecipient($user->id);
@@ -60,6 +65,13 @@ class DashboardController extends Controller
             ->take(6)
             ->get();
 
+        $myTaskCounts = [
+            'total' => \App\Models\Disposition::where('recipient_user_id', $user->id)->count(),
+            'menunggu' => \App\Models\Disposition::where('recipient_user_id', $user->id)->where('status', 'Menunggu')->count(),
+            'diproses' => \App\Models\Disposition::where('recipient_user_id', $user->id)->where('status', 'Diproses')->count(),
+            'selesai' => \App\Models\Disposition::where('recipient_user_id', $user->id)->where('status', 'Selesai')->count(),
+        ];
+
         return view('dashboard.index', compact(
             'user',
             'totalSurat',
@@ -72,7 +84,9 @@ class DashboardController extends Controller
             'recentLetters',
             'recentAudits',
             'unreadNotifications',
-            'monthlyStats'
+            'monthlyStats',
+            'myTaskCounts',
+            'outgoingCounts'
         ));
     }
 }

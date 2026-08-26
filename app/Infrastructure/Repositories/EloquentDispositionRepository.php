@@ -43,6 +43,7 @@ class EloquentDispositionRepository implements DispositionRepositoryInterface
     {
         $disposition = Disposition::create([
             'letter_id' => $dto->letterId,
+            'parent_id' => $dto->parentId,
             'sender_user_id' => $dto->senderUserId,
             'recipient_user_id' => $dto->recipientUserId,
             'recipient_department_id' => $dto->recipientDepartmentId,

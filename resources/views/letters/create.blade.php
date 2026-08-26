@@ -83,8 +83,8 @@
             </div>
 
             <div class="mb-4">
-                <label class="form-label fw-semibold text-dark fs-7">Unggah Berkas Dokumen (PDF / JPG / PNG) <span class="text-danger">*</span></label>
-                <input type="file" name="letter_file" class="form-control @error('letter_file') is-invalid @enderror" accept=".pdf,.jpg,.jpeg,.png" required>
+                <label class="form-label fw-semibold text-dark fs-7">Unggah Berkas Dokumen (PDF / JPG / PNG) <span class="text-muted fw-normal">(Opsional)</span></label>
+                <input type="file" name="letter_file" class="form-control @error('letter_file') is-invalid @enderror" accept=".pdf,.jpg,.jpeg,.png">
                 <small class="text-muted" style="font-size:0.75rem;">Maksimum ukuran file: 10 MB.</small>
                 @error('letter_file') <div class="text-danger fs-7 mt-1">{{ $message }}</div> @enderror
             </div>

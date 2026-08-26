@@ -8,16 +8,17 @@ use App\Http\Controllers\DispositionController;
 use App\Http\Controllers\LetterController;
 use App\Http\Controllers\MasterDataController;
 use App\Http\Controllers\ReportController;
+use App\Http\Controllers\OutgoingLetterController;
 use Illuminate\Support\Facades\Route;
 
 // Guest Routes
 Route::middleware('guest')->group(function () {
     Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
-    Route::post('/login', [AuthController::class, 'login']);
+    Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:5,1');
 });
 
 // Quick Role Switcher (For Demo & Testing)
-Route::post('/quick-login', [AuthController::class, 'quickLogin'])->name('quick-login');
+Route::post('/quick-login', [AuthController::class, 'quickLogin'])->middleware('throttle:10,1')->name('quick-login');
 
 // Authenticated Routes
 Route::middleware('auth')->group(function () {
@@ -32,19 +33,31 @@ Route::middleware('auth')->group(function () {
         Route::resource('letters', LetterController::class)->except(['index', 'show']);
     });
     
-    // Semua auth user bisa melihat surat (untuk list dan detail surat disposisi)
+    // Surat Masuk List, Show, File Stream & Agenda
     Route::get('/letters', [LetterController::class, 'index'])->name('letters.index');
     Route::get('/letters/{letter}', [LetterController::class, 'show'])->name('letters.show');
+    Route::get('/letters/{letter}/file', [LetterController::class, 'file'])->name('letters.file');
     Route::get('/letters/{letter}/print-agenda', [LetterController::class, 'printAgenda'])->name('letters.print-agenda');
 
-    // Disposisi (All Auth - tapi nanti dikontrol di controller view)
+    // Surat Keluar (Hanya Admin yang bisa CRUD)
+    Route::middleware('role:admin')->group(function () {
+        Route::resource('outgoing-letters', OutgoingLetterController::class)->except(['index', 'show']);
+    });
+    Route::get('/outgoing-letters', [OutgoingLetterController::class, 'index'])->name('outgoing-letters.index');
+    Route::get('/outgoing-letters/{outgoing_letter}', [OutgoingLetterController::class, 'show'])->name('outgoing-letters.show');
+    Route::get('/outgoing-letters/{outgoing_letter}/file', [OutgoingLetterController::class, 'file'])->name('outgoing-letters.file');
+    Route::get('/outgoing-letters/{outgoing_letter}/print-agenda', [OutgoingLetterController::class, 'printAgenda'])->name('outgoing-letters.print-agenda');
+
+    // Disposisi (All Auth - dikontrol di controller view)
     Route::get('/dispositions', [DispositionController::class, 'index'])->name('dispositions.index');
     
-    // Hanya Admin & Pimpinan yang bisa buat disposisi
+    // Hanya Admin & Pimpinan yang bisa buat disposisi awal
     Route::middleware('role:admin,pimpinan')->group(function () {
         Route::post('/dispositions', [DispositionController::class, 'store'])->name('dispositions.store');
     });
 
+    // Teruskan Disposisi (Cascading / Forwarding)
+    Route::post('/dispositions/{disposition}/forward', [DispositionController::class, 'forward'])->name('dispositions.forward');
     Route::put('/dispositions/{disposition}/follow-up', [DispositionController::class, 'followUp'])->name('dispositions.follow-up');
     Route::get('/dispositions/{letter}/print-sheet', [DispositionController::class, 'printSheet'])->name('dispositions.print-sheet');
 

@@ -86,7 +86,7 @@
                         <i class="fa-solid fa-file-pdf me-2 text-danger"></i> Pratinjau Dokumen Surat
                     </h6>
                     @if($letter->file_path)
-                        <a href="{{ asset('storage/' . $letter->file_path) }}" target="_blank" class="btn btn-sm btn-outline-primary fw-bold">
+                        <a href="{{ route('letters.file', $letter->id) }}" target="_blank" class="btn btn-sm btn-outline-primary fw-bold">
                             <i class="fa-solid fa-arrow-up-right-from-square me-1"></i> Buka Fullscreen / Download
                         </a>
                     @endif
@@ -95,10 +95,10 @@
                 @if($letter->file_path && Storage::disk('public')->exists($letter->file_path))
                     <div class="rounded-3 border overflow-hidden" style="height: 550px; background: #525659;">
                         @if($letter->file_type === 'pdf')
-                            <iframe src="{{ asset('storage/' . $letter->file_path) }}" width="100%" height="100%" style="border:none;"></iframe>
+                            <iframe src="{{ route('letters.file', $letter->id) }}" width="100%" height="100%" style="border:none;"></iframe>
                         @else
                             <div class="d-flex align-items-center justify-content-center h-100 p-3">
-                                <img src="{{ asset('storage/' . $letter->file_path) }}" alt="Preview Dokumen" class="img-fluid rounded shadow" style="max-height:100%;">
+                                <img src="{{ route('letters.file', $letter->id) }}" alt="Preview Dokumen" class="img-fluid rounded shadow" style="max-height:100%;">
                             </div>
                         @endif
                     </div>
@@ -125,9 +125,17 @@
                 @forelse($letter->dispositions as $disp)
                     <div class="p-3 mb-3 rounded-3 border border-start border-4 {{ $disp->status == 'Selesai' ? 'border-success bg-success-subtle' : ($disp->status == 'Diproses' ? 'border-warning bg-warning-subtle' : 'border-primary bg-light') }}">
                         <div class="d-flex align-items-center justify-content-between mb-2">
-                            <span class="fw-bold text-dark fs-7">
-                                <i class="fa-solid fa-user-gear me-1 text-primary"></i> Ke: {{ $disp->recipient->name }}
-                            </span>
+                            <div>
+                                <span class="fw-bold text-dark fs-7 d-block">
+                                    <i class="fa-solid fa-user-gear me-1 text-primary"></i> Ke: {{ $disp->recipient->name }}
+                                </span>
+                                <small class="text-muted" style="font-size:0.7rem;">Dari: {{ $disp->sender->name }} ({{ $disp->sender->jabatan ?? $disp->sender->role->display_name }})</small>
+                                @if($disp->parent_id)
+                                    <span class="badge bg-info-subtle text-info d-inline-block mt-1" style="font-size:0.65rem;">
+                                        <i class="fa-solid fa-code-fork me-1"></i> Disposisi Terusan
+                                    </span>
+                                @endif
+                            </div>
                             <span class="badge {{ $disp->status == 'Selesai' ? 'bg-success' : ($disp->status == 'Diproses' ? 'bg-warning text-dark' : 'bg-primary') }}">
                                 {{ $disp->status }}
                             </span>
@@ -154,13 +162,67 @@
 
                         <!-- Action for Recipient User -->
                         @if(auth()->id() === $disp->recipient_user_id && $disp->status !== 'Selesai')
-                            <button type="button" class="btn btn-sm btn-dark w-100 fw-bold mt-2 fs-7" data-bs-toggle="modal" data-bs-target="#modalFollowUpShow{{ $disp->id }}">
-                                Input Laporan Tindak Lanjut
-                            </button>
+                            <div class="d-flex gap-2 mt-3">
+                                <button type="button" class="btn btn-sm btn-outline-info flex-fill fw-bold fs-7" data-bs-toggle="modal" data-bs-target="#modalForwardShow{{ $disp->id }}">
+                                    <i class="fa-solid fa-share-nodes me-1"></i> Teruskan
+                                </button>
+                                <button type="button" class="btn btn-sm btn-success flex-fill fw-bold fs-7" data-bs-toggle="modal" data-bs-target="#modalFollowUpShow{{ $disp->id }}">
+                                    <i class="fa-solid fa-check-circle me-1"></i> Lapor Selesai
+                                </button>
+                            </div>
+
+                            <!-- Modal Teruskan Disposisi -->
+                            <div class="modal fade" id="modalForwardShow{{ $disp->id }}" tabindex="-1">
+                                <div class="modal-dialog modal-lg modal-dialog-centered">
+                                    <div class="modal-content rounded-4 border-0 shadow-lg">
+                                        <div class="modal-header border-bottom p-3">
+                                            <h5 class="modal-title fw-bold text-dark">
+                                                <i class="fa-solid fa-share-nodes text-primary me-2"></i> Teruskan Disposisi ke Staf / Pelaksana
+                                            </h5>
+                                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                        </div>
+                                        <form action="{{ route('dispositions.forward', $disp->id) }}" method="POST">
+                                            @csrf
+                                            <div class="modal-body p-4">
+                                                <div class="mb-3">
+                                                    <label class="form-label fw-semibold text-dark">Pilih Penerima Terusan <span class="text-danger">*</span></label>
+                                                    <div class="row g-2 max-h-60 overflow-auto">
+                                                        @foreach($recipients as $rec)
+                                                            @if($rec->id !== auth()->id())
+                                                                <div class="col-md-6">
+                                                                    <label class="recipient-card d-flex align-items-start gap-2 p-3 rounded-3 border bg-light w-100 mb-0 user-select-none h-100" for="fwd_show_{{ $disp->id }}_{{ $rec->id }}" style="cursor: pointer;">
+                                                                        <input class="form-check-input mt-1 flex-shrink-0" type="checkbox" name="recipients[]" value="{{ $rec->id }}" id="fwd_show_{{ $disp->id }}_{{ $rec->id }}" style="cursor: pointer;">
+                                                                        <div class="flex-grow-1">
+                                                                            <div class="fw-bold text-dark fs-7 lh-sm">{{ $rec->name }}</div>
+                                                                            <span class="badge bg-secondary text-white d-inline-block mt-1" style="font-size:0.65rem;">{{ $rec->jabatan ?? $rec->role->display_name }}</span>
+                                                                        </div>
+                                                                    </label>
+                                                                </div>
+                                                            @endif
+                                                        @endforeach
+                                                    </div>
+                                                </div>
+
+                                                <div class="mb-3">
+                                                    <label class="form-label fw-semibold text-dark">Petunjuk / Arahan Tambahan <span class="text-danger">*</span></label>
+                                                    <textarea name="instruction" class="form-control" rows="3" placeholder="Tuliskan arahan spesifik untuk staf pelaksana..." required></textarea>
+                                                </div>
+                                            </div>
+
+                                            <div class="modal-footer border-top p-3">
+                                                <button type="button" class="btn btn-light" data-bs-dismiss="modal">Batal</button>
+                                                <button type="submit" class="btn btn-primary fw-bold px-4" style="background:#0284c7; border:none;">
+                                                    <i class="fa-solid fa-paper-plane me-1"></i> Teruskan Disposisi
+                                                </button>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
 
                             <!-- Modal Follow Up -->
                             <div class="modal fade" id="modalFollowUpShow{{ $disp->id }}" tabindex="-1">
-                                <div class="modal-dialog">
+                                <div class="modal-dialog modal-dialog-centered">
                                     <div class="modal-content rounded-4 border-0">
                                         <div class="modal-header border-bottom">
                                             <h5 class="modal-title fw-bold">Tindak Lanjut Disposisi</h5>
@@ -169,12 +231,12 @@
                                         <form action="{{ route('dispositions.follow-up', $disp->id) }}" method="POST">
                                             @csrf
                                             @method('PUT')
-                                            <div class="modal-body">
+                                            <div class="modal-body p-4">
                                                 <div class="mb-3">
                                                     <label class="form-label fw-semibold">Status Tindak Lanjut</label>
                                                     <select name="status" class="form-select" required>
                                                         <option value="Diproses">Diproses (Sedang Dikerjakan)</option>
-                                                        <option value="Selesai">Selesai (Sudah Dilaksanakan)</option>
+                                                        <option value="Selesai" selected>Selesai (Sudah Dilaksanakan)</option>
                                                     </select>
                                                 </div>
                                                 <div class="mb-3">
@@ -182,7 +244,7 @@
                                                     <textarea name="follow_up_notes" class="form-control" rows="4" placeholder="Tuliskan laporan tindak lanjut..." required></textarea>
                                                 </div>
                                             </div>
-                                            <div class="modal-footer border-top">
+                                            <div class="modal-footer border-top p-3">
                                                 <button type="button" class="btn btn-light" data-bs-dismiss="modal">Batal</button>
                                                 <button type="submit" class="btn btn-success fw-bold px-4">Simpan Laporan</button>
                                             </div>
@@ -229,16 +291,30 @@
                             <div class="row g-2 max-h-60 overflow-auto">
                                 @foreach($recipients as $rec)
                                     <div class="col-md-6">
-                                        <div class="form-check p-3 rounded-3 border bg-light">
-                                            <input class="form-check-input" type="checkbox" name="recipients[]" value="{{ $rec->id }}" id="rec{{ $rec->id }}">
-                                            <label class="form-check-input-label fw-bold text-dark fs-7" for="rec{{ $rec->id }}">
-                                                {{ $rec->name }}
-                                                <span class="badge bg-secondary text-white d-block mt-1" style="font-size:0.65rem;">{{ $rec->jabatan ?? $rec->role->display_name }}</span>
-                                            </label>
-                                        </div>
+                                        <label class="recipient-card d-flex align-items-start gap-2 p-3 rounded-3 border bg-light w-100 mb-0 user-select-none h-100" for="rec{{ $rec->id }}" style="cursor: pointer;">
+                                            <input class="form-check-input mt-1 flex-shrink-0" type="checkbox" name="recipients[]" value="{{ $rec->id }}" id="rec{{ $rec->id }}" style="cursor: pointer;">
+                                            <div class="flex-grow-1">
+                                                <div class="fw-bold text-dark fs-7 lh-sm">{{ $rec->name }}</div>
+                                                <span class="badge bg-secondary text-white d-inline-block mt-1" style="font-size:0.65rem;">{{ $rec->jabatan ?? $rec->role->display_name }}</span>
+                                            </div>
+                                        </label>
                                     </div>
                                 @endforeach
                             </div>
+                            <style>
+                                .recipient-card {
+                                    transition: all 0.15s ease-in-out;
+                                }
+                                .recipient-card:hover {
+                                    background-color: #f1f5f9 !important;
+                                    border-color: #94a3b8 !important;
+                                }
+                                .recipient-card:has(input:checked) {
+                                    background-color: #f0f9ff !important;
+                                    border-color: #0284c7 !important;
+                                    box-shadow: 0 0 0 1px #0284c7;
+                                }
+                            </style>
                         </div>
 
                         <div class="row g-3 mb-3">

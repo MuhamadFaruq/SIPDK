@@ -5,18 +5,35 @@ namespace App\Infrastructure\Storage;
 use App\Core\Contracts\Services\FileStorageServiceInterface;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
+use InvalidArgumentException;
 
 class LocalFileStorageService implements FileStorageServiceInterface
 {
+    private const ALLOWED_EXTENSIONS = ['pdf', 'jpg', 'jpeg', 'png', 'doc', 'docx'];
+
     public function storeLetterFile(UploadedFile $file): array
     {
-        $fileName = time() . '_' . preg_replace('/[^a-zA-Z0-9._-]/', '', $file->getClientOriginalName());
-        $filePath = $file->storeAs('letters', $fileName, 'public');
+        $extension = strtolower($file->getClientOriginalExtension());
+
+        if (!in_array($extension, self::ALLOWED_EXTENSIONS, true)) {
+            throw new InvalidArgumentException("Format berkas .{$extension} tidak diizinkan untuk keamanan sistem.");
+        }
+
+        // Sanitize original file name (strip null bytes, path traversal, dangerous characters)
+        $cleanOriginalName = preg_replace('/[^\w\s\.-]/i', '', basename(str_replace(["\0", '../', '..\\'], '', $file->getClientOriginalName())));
+        if (empty($cleanOriginalName)) {
+            $cleanOriginalName = 'dokumen_' . time() . '.' . $extension;
+        }
+
+        // Cryptographically secure randomized storage filename to prevent direct path traversal or overwrite attacks
+        $randomStorageName = Str::random(40) . '.' . $extension;
+        $filePath = $file->storeAs('letters', $randomStorageName, 'public');
 
         return [
             'file_path' => $filePath,
-            'file_name' => $file->getClientOriginalName(),
-            'file_type' => strtolower($file->getClientOriginalExtension()),
+            'file_name' => $cleanOriginalName,
+            'file_type' => $extension,
             'file_size' => $file->getSize(),
         ];
     }

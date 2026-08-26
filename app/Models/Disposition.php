@@ -11,6 +11,7 @@ class Disposition extends Model
 
     protected $fillable = [
         'letter_id',
+        'parent_id',
         'sender_user_id',
         'recipient_user_id',
         'recipient_department_id',
@@ -30,6 +31,16 @@ class Disposition extends Model
     public function letter()
     {
         return $this->belongsTo(Letter::class);
+    }
+
+    public function parent()
+    {
+        return $this->belongsTo(Disposition::class, 'parent_id');
+    }
+
+    public function children()
+    {
+        return $this->hasMany(Disposition::class, 'parent_id');
     }
 
     public function sender()

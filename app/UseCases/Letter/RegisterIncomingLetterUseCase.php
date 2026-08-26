@@ -18,7 +18,7 @@ class RegisterIncomingLetterUseCase
 
     public function execute(array $requestData, $file, $user): Letter
     {
-        $fileData = $this->fileStorageService->storeLetterFile($file);
+        $fileData = $file ? $this->fileStorageService->storeLetterFile($file) : null;
         $dto = LetterDTO::fromRequest($requestData, $fileData, $user->id);
 
         $letter = $this->letterRepository->createLetter($dto);
