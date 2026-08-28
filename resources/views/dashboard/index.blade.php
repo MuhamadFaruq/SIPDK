@@ -7,7 +7,7 @@
     <div class="card-custom p-4 mb-4" style="background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); color: white;">
         <div class="row align-items-center">
             <div class="col-lg-8">
-                <div class="d-inline-flex align-items-center gap-2 px-3 py-1 rounded-pill bg-white bg-opacity-10 text-white fs-7 mb-2">
+                <div class="d-inline-flex align-items-center gap-2 px-3 py-1 rounded-pill text-white fs-7 mb-2" style="background: rgba(255, 255, 255, 0.15); border: 1px solid rgba(255, 255, 255, 0.2);">
                     <i class="fa-regular fa-calendar-check"></i>
                     <span>{{ \Carbon\Carbon::now()->isoFormat('dddd, D MMMM Y') }}</span>
                 </div>

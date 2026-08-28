@@ -64,6 +64,14 @@
             border-radius: 50%;
         }
 
+        .brand-pill {
+            background: rgba(255, 255, 255, 0.16);
+            border: 1px solid rgba(255, 255, 255, 0.28);
+            color: #ffffff;
+            font-size: 0.8rem;
+            letter-spacing: 0.3px;
+        }
+
         .feature-item {
             display: flex;
             align-items: center;
@@ -114,9 +122,9 @@
             <!-- Left Hero Section -->
             <div class="col-lg-5 brand-hero">
                 <div class="position-relative" style="z-index: 2;">
-                    <div class="d-inline-flex align-items-center gap-2 mb-4 bg-white bg-opacity-20 px-3 py-1 rounded-pill">
-                        <i class="fa-solid fa-building-columns"></i>
-                        <span class="fw-bold" style="font-size: 0.78rem;">Kelurahan Dukuh</span>
+                    <div class="brand-pill d-inline-flex align-items-center gap-2 mb-4 px-3 py-1.5 rounded-pill">
+                        <i class="fa-solid fa-building-columns text-white"></i>
+                        <span class="fw-bold text-white">Kelurahan Dukuh</span>
                     </div>
 
                     <h2 class="fw-extrabold text-white mb-2" style="font-size: 2.1rem; letter-spacing: -0.5px;">SIPDK</h2>

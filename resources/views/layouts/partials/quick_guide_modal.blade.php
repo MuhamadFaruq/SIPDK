@@ -4,8 +4,8 @@
         <div class="modal-content border-0 shadow rounded-4 overflow-hidden">
             <div class="modal-header border-0 text-white p-4" style="background: linear-gradient(135deg, #0284c7 0%, #0f172a 100%);">
                 <div class="d-flex align-items-center gap-3">
-                    <div class="rounded-circle bg-white bg-opacity-20 d-flex align-items-center justify-content-center" style="width: 48px; height: 48px; font-size: 1.3rem;">
-                        <i class="fa-solid fa-circle-question"></i>
+                    <div class="rounded-circle d-flex align-items-center justify-content-center" style="width: 48px; height: 48px; font-size: 1.3rem; background: rgba(255, 255, 255, 0.2);">
+                        <i class="fa-solid fa-circle-question text-white"></i>
                     </div>
                     <div>
                         <h5 class="modal-title fw-bold m-0" id="quickGuideModalLabel">Panduan Cepat & Alur Sistem SIPDK</h5>
